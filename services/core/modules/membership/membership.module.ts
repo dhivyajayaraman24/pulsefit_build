@@ -9,7 +9,7 @@ import {
   MembershipPlan,
   MembershipStatusHistory,
 } from './entities';
-import { MembersController } from './members.controller';
+import { MembersController } from './controllers';
 import { MembershipStatusService } from './membership-status.service';
 import { MembershipService } from './membership.service';
 

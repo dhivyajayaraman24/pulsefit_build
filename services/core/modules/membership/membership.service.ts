@@ -13,7 +13,6 @@ import {
   Member,
   MemberProfileStatus,
   Membership,
-  MembershipDerivedStatus,
 } from './entities';
 import { MembershipStatusService } from './membership-status.service';
 
@@ -115,14 +114,13 @@ export class MembershipService {
         requestedBranchId: context.branchId,
       }),
     }));
-    const eligible = member.status === MemberProfileStatus.ACTIVE
-      && evaluations.some((evaluation) => (
-        evaluation.status === MembershipDerivedStatus.ACTIVE
-        || evaluation.status === MembershipDerivedStatus.GRACE
-      ));
+    const decision = this.statusService.decideEligibility({
+      derivedStatuses: evaluations.map((evaluation) => evaluation.status),
+      profileStatus: member.status,
+    });
 
     return {
-      eligible,
+      ...decision,
       memberId: member.id,
       profileStatus: member.status,
       branchId: context.branchId,
