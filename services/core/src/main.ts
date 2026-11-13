@@ -2,10 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common';
+import { HttpExceptionFilter, JsonLoggerService, ObservabilityService } from './common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const logger = app.get(JsonLoggerService);
+  app.useLogger(logger);
+  app.get(ObservabilityService).start();
+
   const origins = (process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:5174')
     .split(',')
     .map((origin) => origin.trim())
