@@ -1,0 +1,337 @@
+name: PulseFit CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      deploy_environment:
+        description: Environment to deploy after gates pass
+        required: false
+        type: choice
+        options:
+          - none
+          - staging
+          - production
+        default: none
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+  id-token: write
+
+env:
+  NODE_VERSION: "20"
+  FLUTTER_VERSION: "3.24.x"
+  AWS_REGION: ap-south-1
+
+jobs:
+  backend_quality:
+    name: Backend build, type-check, and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/core
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: services/core/package-lock.json
+      - run: npm ci
+      - name: Build and type-check NestJS core
+        run: npm run build
+      - name: Run backend unit and integration tests
+        run: npm test -- --runInBand
+
+  react_quality:
+    name: React apps and shared packages
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - apps/frontdesk-trainer-pwa
+          - apps/management-portal
+          - packages/ui
+          - packages/api-client
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+      - run: npm ci
+      - name: Lint or type-check scaffold
+        run: ../../scripts/ci-node-quality.sh
+      - name: Build scaffold
+        run: npm run build
+      - name: Run scaffold tests
+        run: ../../scripts/ci-node-tests.sh
+
+  flutter_quality:
+    name: Flutter member mobile quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/member-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze Flutter app
+        run: flutter analyze
+      - name: Run Flutter tests
+        run: ../../scripts/ci-flutter-tests.sh
+      - name: Build Flutter web app
+        run: flutter build web --release
+
+  terraform_quality:
+    name: Terraform format and validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate
+
+  docker_build:
+    name: Container build checks
+    runs-on: ubuntu-latest
+    needs:
+      - backend_quality
+      - react_quality
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: core
+            dockerfile: docker/backend/Dockerfile
+            context: .
+            build_args: |
+              SERVICE_PATH=services/core
+          - name: frontdesk-trainer-pwa
+            dockerfile: docker/react-app/Dockerfile
+            context: .
+            build_args: |
+              APP_PATH=apps/frontdesk-trainer-pwa
+          - name: management-portal
+            dockerfile: docker/react-app/Dockerfile
+            context: .
+            build_args: |
+              APP_PATH=apps/management-portal
+          - name: member-mobile-web
+            dockerfile: docker/flutter-app/Dockerfile
+            context: .
+            build_args: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.dockerfile }}
+          build-args: ${{ matrix.image.build_args }}
+          tags: pulsefit/${{ matrix.image.name }}:${{ github.sha }}
+          load: true
+
+  sast_codeql:
+    name: SAST CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
+
+  dependency_cve_scan:
+    name: Dependency and CVE scan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - services/core
+          - apps/frontdesk-trainer-pwa
+          - apps/management-portal
+          - packages/ui
+          - packages/api-client
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ matrix.project }}/package-lock.json
+      - run: npm ci
+      - name: Block high and critical npm advisories
+        run: npm audit --audit-level=high
+
+  secret_scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sbom_generation:
+    name: SBOM generation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: pulsefit-sbom.spdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pulsefit-sbom
+          path: pulsefit-sbom.spdx.json
+          retention-days: 365
+
+  container_scan:
+    name: Container scan
+    runs-on: ubuntu-latest
+    needs:
+      - docker_build
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: core
+            dockerfile: docker/backend/Dockerfile
+            context: .
+            build_args: |
+              SERVICE_PATH=services/core
+          - name: frontdesk-trainer-pwa
+            dockerfile: docker/react-app/Dockerfile
+            context: .
+            build_args: |
+              APP_PATH=apps/frontdesk-trainer-pwa
+          - name: management-portal
+            dockerfile: docker/react-app/Dockerfile
+            context: .
+            build_args: |
+              APP_PATH=apps/management-portal
+          - name: member-mobile-web
+            dockerfile: docker/flutter-app/Dockerfile
+            context: .
+            build_args: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.dockerfile }}
+          build-args: ${{ matrix.image.build_args }}
+          tags: pulsefit/${{ matrix.image.name }}:${{ github.sha }}
+          load: true
+      - name: Scan image for high and critical vulnerabilities
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: pulsefit/${{ matrix.image.name }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: "1"
+
+  security_gate:
+    name: Blocking security release gate
+    runs-on: ubuntu-latest
+    needs:
+      - sast_codeql
+      - dependency_cve_scan
+      - secret_scan
+      - sbom_generation
+      - container_scan
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enforce ARD high and critical blocking policy
+        env:
+          SAST_RESULT: ${{ needs.sast_codeql.result }}
+          DEPENDENCY_RESULT: ${{ needs.dependency_cve_scan.result }}
+          SECRET_RESULT: ${{ needs.secret_scan.result }}
+          SBOM_RESULT: ${{ needs.sbom_generation.result }}
+          CONTAINER_RESULT: ${{ needs.container_scan.result }}
+        run: scripts/enforce-security-gate.sh
+
+  release_readiness:
+    name: Release readiness gate
+    runs-on: ubuntu-latest
+    needs:
+      - backend_quality
+      - react_quality
+      - flutter_quality
+      - terraform_quality
+      - docker_build
+      - security_gate
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify all quality and security gates passed
+        env:
+          BACKEND_RESULT: ${{ needs.backend_quality.result }}
+          REACT_RESULT: ${{ needs.react_quality.result }}
+          FLUTTER_RESULT: ${{ needs.flutter_quality.result }}
+          TERRAFORM_RESULT: ${{ needs.terraform_quality.result }}
+          DOCKER_RESULT: ${{ needs.docker_build.result }}
+          SECURITY_RESULT: ${{ needs.security_gate.result }}
+        run: scripts/enforce-release-gate.sh
+
+  deploy_staging:
+    name: Deploy staging approval
+    runs-on: ubuntu-latest
+    needs: release_readiness
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_environment == 'staging'
+    environment:
+      name: staging
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Staging deployment placeholder approved after all CI/CD gates."
+
+  deploy_production:
+    name: Deploy production approval
+    runs-on: ubuntu-latest
+    needs: release_readiness
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_environment == 'production'
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Production deployment placeholder approved after all CI/CD gates."
