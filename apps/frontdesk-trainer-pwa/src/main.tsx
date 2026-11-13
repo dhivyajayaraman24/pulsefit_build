@@ -11,6 +11,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { MemberOperations } from './features/members/MemberOperations';
 import './styles.css';
 
 type Persona = 'frontDesk' | 'trainer';
@@ -113,6 +114,7 @@ function App() {
             );
           })}
         </section>
+        <MemberOperations persona={persona} />
       </section>
     </main>
   );
