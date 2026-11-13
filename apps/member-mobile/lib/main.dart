@@ -1,0 +1,141 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const PulseFitMemberApp());
+}
+
+class PulseFitMemberApp extends StatelessWidget {
+  const PulseFitMemberApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'PulseFit',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F766E)),
+        useMaterial3: true,
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (_) => const MemberHomeScreen(),
+        '/profile': (_) => const PlaceholderScreen(
+              title: 'Profile',
+              detail: 'Member details, home branch, and membership status.',
+              icon: Icons.person_outline,
+            ),
+        '/renewals': (_) => const PlaceholderScreen(
+              title: 'Renewals',
+              detail: 'Renewal eligibility, payment links, and auto-renew opt-in.',
+              icon: Icons.autorenew,
+            ),
+        '/timetable': (_) => const PlaceholderScreen(
+              title: 'Timetable',
+              detail: 'Classes, bookings, cancellations, and waitlist status.',
+              icon: Icons.calendar_month_outlined,
+            ),
+        '/notifications': (_) => const PlaceholderScreen(
+              title: 'Notifications',
+              detail: 'SMS, WhatsApp, email, and push message preferences.',
+              icon: Icons.notifications_outlined,
+            ),
+        '/qr-check-in': (_) => const PlaceholderScreen(
+              title: 'QR Check-In',
+              detail: 'Fast member entry validation for active branch access.',
+              icon: Icons.qr_code_2,
+            ),
+      },
+    );
+  }
+}
+
+class MemberHomeScreen extends StatelessWidget {
+  const MemberHomeScreen({super.key});
+
+  static const _destinations = [
+    _Destination('Profile', '/profile', Icons.person_outline),
+    _Destination('Renewals', '/renewals', Icons.autorenew),
+    _Destination('Timetable', '/timetable', Icons.calendar_month_outlined),
+    _Destination('Notifications', '/notifications', Icons.notifications_outlined),
+    _Destination('QR Check-In', '/qr-check-in', Icons.qr_code_2),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('PulseFit Member')),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Home', style: Theme.of(context).textTheme.headlineSmall),
+                    const SizedBox(height: 8),
+                    const Text('Minimal member app shell for launch workflows.'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            for (final destination in _destinations)
+              Card(
+                child: ListTile(
+                  leading: Icon(destination.icon),
+                  title: Text(destination.label),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).pushNamed(destination.route),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PlaceholderScreen extends StatelessWidget {
+  const PlaceholderScreen({
+    required this.title,
+    required this.detail,
+    required this.icon,
+    super.key,
+  });
+
+  final String title;
+  final String detail;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 56),
+              const SizedBox(height: 16),
+              Text(title, style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 8),
+              Text(detail, textAlign: TextAlign.center),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Destination {
+  const _Destination(this.label, this.route, this.icon);
+
+  final String label;
+  final String route;
+  final IconData icon;
+}
