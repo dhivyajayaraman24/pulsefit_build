@@ -1,8 +1,28 @@
 import { DataSourceOptions } from 'typeorm';
 import { AuditLog } from '../../../modules/audit-compliance/entities';
+import {
+  Member,
+  Membership,
+  MembershipBranchAccess,
+  MembershipFreezePeriod,
+  MembershipPlan,
+  MembershipStatusHistory,
+} from '../../../modules/membership/entities';
 import { Branch, JobMetadata, Role, User } from './entities';
 
-const entities = [AuditLog, Branch, JobMetadata, Role, User];
+const entities = [
+  AuditLog,
+  Branch,
+  JobMetadata,
+  Member,
+  Membership,
+  MembershipBranchAccess,
+  MembershipFreezePeriod,
+  MembershipPlan,
+  MembershipStatusHistory,
+  Role,
+  User,
+];
 
 export function buildDatabaseOptions(): DataSourceOptions {
   return {
