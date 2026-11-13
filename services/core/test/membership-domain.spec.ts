@@ -12,7 +12,11 @@ import {
   MembershipFreezePeriod,
   MembershipPaymentStatus,
 } from '../modules/membership/entities';
-import { MembershipStatusService } from '../modules/membership/membership-status.service';
+import {
+  MembershipEligibilityAction,
+  MembershipEligibilityReason,
+  MembershipStatusService,
+} from '../modules/membership/membership-status.service';
 import { MembershipService } from '../modules/membership/membership.service';
 
 describe('membership persistence domain', () => {
@@ -83,6 +87,48 @@ describe('MembershipStatusService', () => {
       } as MembershipBranchAccess],
       requestedBranchId: 'branch-1',
     }, now)).toBe(MembershipDerivedStatus.ACTIVE);
+  });
+
+  it('maps shared derived statuses to eligibility results, reasons, and actions', () => {
+    expect(service.decideEligibility({
+      derivedStatuses: [MembershipDerivedStatus.ACTIVE],
+      profileStatus: MemberProfileStatus.ACTIVE,
+    })).toEqual({
+      actions: [],
+      allowed: true,
+      reason: MembershipEligibilityReason.ACTIVE,
+      result: 'allowed',
+    });
+    expect(service.decideEligibility({
+      derivedStatuses: [MembershipDerivedStatus.GRACE],
+      profileStatus: MemberProfileStatus.ACTIVE,
+    })).toEqual({
+      actions: [MembershipEligibilityAction.RENEW],
+      allowed: true,
+      reason: MembershipEligibilityReason.GRACE,
+      result: 'allowed',
+    });
+    expect(service.decideEligibility({
+      derivedStatuses: [MembershipDerivedStatus.UNPAID],
+      profileStatus: MemberProfileStatus.ACTIVE,
+    })).toEqual({
+      actions: [
+        MembershipEligibilityAction.COLLECT_PAYMENT,
+        MembershipEligibilityAction.ESCALATE,
+      ],
+      allowed: false,
+      reason: MembershipEligibilityReason.UNPAID,
+      result: 'blocked',
+    });
+    expect(service.decideEligibility({
+      derivedStatuses: [MembershipDerivedStatus.ACTIVE],
+      profileStatus: MemberProfileStatus.DEACTIVATED,
+    })).toEqual({
+      actions: [MembershipEligibilityAction.ESCALATE],
+      allowed: false,
+      reason: MembershipEligibilityReason.DEACTIVATED_PROFILE,
+      result: 'blocked',
+    });
   });
 });
 
@@ -168,5 +214,54 @@ describe('MembershipService member operations', () => {
       phone: '+919876543210',
     }, context)).rejects.toBeInstanceOf(ForbiddenException);
     expect(members.save).not.toHaveBeenCalled();
+  });
+
+  it('returns branch-scoped eligibility with a blocked reason and required actions', async () => {
+    const members = makeMembersRepository();
+    members.findOne.mockResolvedValue({
+      homeBranchId: 'branch-1',
+      id: 'member-1',
+      status: MemberProfileStatus.ACTIVE,
+    } as Member);
+    const memberships = {
+      find: jest.fn().mockResolvedValue([
+        {
+          branchAccess: [{
+            branchId: 'branch-1',
+            endsAt: null,
+            isActive: true,
+            startsAt: new Date('2026-01-01T00:00:00.000Z'),
+          }],
+          cancelledAt: null,
+          endsAt: new Date('2026-02-01T00:00:00.000Z'),
+          graceEndsAt: null,
+          id: 'membership-1',
+          paymentStatus: MembershipPaymentStatus.UNPAID,
+        } as Membership,
+      ]),
+    };
+    const service = new MembershipService(
+      members as unknown as Repository<Member>,
+      memberships as unknown as Repository<Membership>,
+      new MembershipStatusService(),
+      { append: jest.fn() },
+    );
+
+    await expect(service.getEligibility('member-1', context)).resolves.toMatchObject({
+      actions: [
+        MembershipEligibilityAction.COLLECT_PAYMENT,
+        MembershipEligibilityAction.ESCALATE,
+      ],
+      allowed: false,
+      branchId: 'branch-1',
+      memberId: 'member-1',
+      memberships: [{
+        membershipId: 'membership-1',
+        status: MembershipDerivedStatus.UNPAID,
+      }],
+      profileStatus: MemberProfileStatus.ACTIVE,
+      reason: MembershipEligibilityReason.UNPAID,
+      result: 'blocked',
+    });
   });
 });
