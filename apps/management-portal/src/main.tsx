@@ -11,6 +11,7 @@ import {
   UsersRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { MembersWorkspace } from './features/members/MembersWorkspace';
 import './styles.css';
 
 type Persona = 'owner' | 'finance' | 'marketingAdmin' | 'branchManager';
@@ -30,6 +31,7 @@ const personaLabels: Record<Persona, string> = {
 const navItems: NavItem[] = [
   { label: 'Dashboard', icon: BarChart3, personas: ['owner', 'finance', 'branchManager'] },
   { label: 'Branches', icon: Building2, personas: ['owner', 'branchManager'] },
+  { label: 'Members', icon: UsersRound, personas: ['owner', 'finance', 'marketingAdmin', 'branchManager'] },
   { label: 'Plans', icon: Settings, personas: ['owner', 'branchManager'] },
   { label: 'Users & RBAC', icon: ShieldCheck, personas: ['owner'] },
   { label: 'Finance', icon: CreditCard, personas: ['owner', 'finance'] },
@@ -118,6 +120,7 @@ function App() {
               );
             })}
           </section>
+          <MembersWorkspace persona={persona} />
         </section>
       </div>
     </main>
@@ -128,6 +131,7 @@ function copyFor(label: string) {
   const copy: Record<string, string> = {
     Dashboard: 'Revenue, renewals, members, bookings, trainer utilization, and branch comparisons.',
     Branches: 'Central branch controls and launch-ready branch-level overrides.',
+    Members: 'Member records, eligibility status, renewal risk, freezes, and branch-scoped actions.',
     Plans: 'Global membership plans with configurable local branch behavior.',
     'Users & RBAC': 'Role assignment, permissions, and branch-scoped access placeholders.',
     Finance: 'Payments, invoices, refunds, GST split, settlements, and exports.',

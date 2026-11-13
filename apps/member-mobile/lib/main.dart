@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'features/membership/membership_screen.dart';
+
 void main() {
   runApp(const PulseFitMemberApp());
 }
@@ -18,16 +20,7 @@ class PulseFitMemberApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (_) => const MemberHomeScreen(),
-        '/profile': (_) => const PlaceholderScreen(
-              title: 'Profile',
-              detail: 'Member details, home branch, and membership status.',
-              icon: Icons.person_outline,
-            ),
-        '/renewals': (_) => const PlaceholderScreen(
-              title: 'Renewals',
-              detail: 'Renewal eligibility, payment links, and auto-renew opt-in.',
-              icon: Icons.autorenew,
-            ),
+        '/membership': (_) => const MembershipScreen(),
         '/timetable': (_) => const PlaceholderScreen(
               title: 'Timetable',
               detail: 'Classes, bookings, cancellations, and waitlist status.',
@@ -38,11 +31,7 @@ class PulseFitMemberApp extends StatelessWidget {
               detail: 'SMS, WhatsApp, email, and push message preferences.',
               icon: Icons.notifications_outlined,
             ),
-        '/qr-check-in': (_) => const PlaceholderScreen(
-              title: 'QR Check-In',
-              detail: 'Fast member entry validation for active branch access.',
-              icon: Icons.qr_code_2,
-            ),
+        '/qr-check-in': (_) => const MembershipScreen(),
       },
     );
   }
@@ -52,8 +41,7 @@ class MemberHomeScreen extends StatelessWidget {
   const MemberHomeScreen({super.key});
 
   static const _destinations = [
-    _Destination('Profile', '/profile', Icons.person_outline),
-    _Destination('Renewals', '/renewals', Icons.autorenew),
+    _Destination('Membership', '/membership', Icons.verified_user_outlined),
     _Destination('Timetable', '/timetable', Icons.calendar_month_outlined),
     _Destination('Notifications', '/notifications', Icons.notifications_outlined),
     _Destination('QR Check-In', '/qr-check-in', Icons.qr_code_2),
@@ -75,7 +63,7 @@ class MemberHomeScreen extends StatelessWidget {
                   children: [
                     Text('Home', style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: 8),
-                    const Text('Minimal member app shell for launch workflows.'),
+                    const Text('Membership, renewal, and check-in readiness in one place.'),
                   ],
                 ),
               ),
