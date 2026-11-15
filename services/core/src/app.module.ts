@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuditComplianceModule } from '../modules/audit-compliance';
+import { MembershipModule } from '../modules/membership';
 import {
   CorrelationIdMiddleware,
   DatabaseModule,
@@ -18,6 +19,7 @@ import { HealthModule } from './health/health.module';
     DatabaseModule,
     QueueModule,
     AuditComplianceModule,
+    MembershipModule,
     HealthModule,
     SecurityDefaultsModule,
   ],

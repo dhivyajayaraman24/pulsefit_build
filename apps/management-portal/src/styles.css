@@ -192,6 +192,355 @@ aside a:hover {
   line-height: 1.5;
 }
 
+.members-workspace {
+  margin-top: 18px;
+  padding-top: 4px;
+}
+
+.section-heading,
+.member-actions,
+.member-tools,
+.member-detail-header,
+.dialog-title,
+.dialog-actions {
+  display: flex;
+  align-items: center;
+}
+
+.section-heading {
+  justify-content: space-between;
+  gap: 16px;
+  margin: 12px 0 14px;
+}
+
+.section-heading p,
+.member-detail-header p,
+.dialog-title p {
+  margin: 0 0 4px;
+  color: #617081;
+}
+
+.section-heading h2,
+.member-detail-header h3,
+.dialog-title h3 {
+  margin: 0;
+}
+
+.member-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.scope-pill,
+.primary-action,
+.icon-action,
+.readonly-note,
+.indicator-strip span,
+.status-badge {
+  border-radius: 8px;
+}
+
+.scope-pill,
+.primary-action,
+.indicator-strip span {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.scope-pill {
+  border: 1px solid #dce2ea;
+  background: #ffffff;
+  color: #526071;
+}
+
+.primary-action {
+  border: 1px solid #264653;
+  color: #ffffff;
+  background: #264653;
+  cursor: pointer;
+}
+
+.member-tools {
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.search-field {
+  display: flex;
+  min-height: 42px;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #cdd6e1;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #ffffff;
+}
+
+.search-field input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #1d2530;
+}
+
+.toggle-filter,
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+}
+
+.member-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.3fr);
+  gap: 14px;
+}
+
+.member-list,
+.member-detail,
+.member-dialog {
+  border: 1px solid #dce2ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.member-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 10px;
+}
+
+.member-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.member-row.selected {
+  border-color: #9bb6c4;
+  background: #f2f8fa;
+}
+
+.member-row small {
+  display: block;
+  margin-top: 3px;
+  color: #617081;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2a9d8f;
+}
+
+.status-dot.atRisk,
+.status-dot.grace {
+  background: #d97706;
+}
+
+.status-dot.frozen {
+  background: #2563eb;
+}
+
+.status-dot.blocked {
+  background: #dc2626;
+}
+
+.status-badge {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  padding: 0 8px;
+  color: #0f5132;
+  background: #dcfce7;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-badge.atRisk,
+.status-badge.grace {
+  color: #7c2d12;
+  background: #ffedd5;
+}
+
+.status-badge.frozen {
+  color: #1e3a8a;
+  background: #dbeafe;
+}
+
+.status-badge.blocked {
+  color: #7f1d1d;
+  background: #fee2e2;
+}
+
+.member-detail {
+  padding: 18px;
+}
+
+.member-detail-header {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.member-detail-header span {
+  color: #526071;
+}
+
+.icon-action {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid #cdd6e1;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.readonly-note {
+  padding: 8px 10px;
+  color: #617081;
+  background: #eef3f7;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.plan-grid div {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.plan-grid dt {
+  color: #617081;
+  font-size: 0.8rem;
+}
+
+.plan-grid dd {
+  margin: 6px 0 0;
+  font-weight: 700;
+}
+
+.indicator-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.indicator-strip span {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.eligibility-card {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.eligibility-card.allowed {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.eligibility-card.blocked {
+  color: #7f1d1d;
+  background: #fee2e2;
+}
+
+.eligibility-card p {
+  margin: 6px 0 0;
+  line-height: 1.45;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.member-dialog {
+  width: min(680px, 100%);
+  padding: 18px;
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.24);
+}
+
+.dialog-title {
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.form-grid label {
+  display: grid;
+  gap: 6px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.form-grid input,
+.form-grid select {
+  min-height: 40px;
+  border: 1px solid #cdd6e1;
+  border-radius: 8px;
+  padding: 0 10px;
+  color: #1d2530;
+  background: #ffffff;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dialog-actions button {
+  min-height: 38px;
+  border: 1px solid #cdd6e1;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.dialog-actions .primary-action {
+  border-color: #264653;
+  background: #264653;
+}
+
 @media (max-width: 980px) {
   .content-shell {
     grid-template-columns: 1fr;
@@ -205,8 +554,13 @@ aside a:hover {
   }
 
   .scoreboard,
-  .module-grid {
+  .module-grid,
+  .member-layout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .member-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -219,11 +573,32 @@ aside a:hover {
 
   aside,
   .scoreboard,
-  .module-grid {
+  .module-grid,
+  .plan-grid,
+  .form-grid {
     grid-template-columns: 1fr;
   }
 
   .workspace {
     padding: 18px;
+  }
+
+  .section-heading,
+  .member-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .member-actions {
+    justify-content: flex-start;
+  }
+
+  .member-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .member-row .status-badge {
+    grid-column: 2;
+    justify-self: start;
   }
 }
